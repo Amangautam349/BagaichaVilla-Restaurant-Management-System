@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bagaicha Villa — Sign In (Live)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,400&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --sand:#F6F3EA; --sand-deep:#EDE8D8; --forest:#2F4034; --forest-deep:#202C24;
+    --sage:#8A9A5B; --brass:#C9A227; --ink:#1E241D; --line:#D8D2C0; --white:#FFFFFF; --error:#A3432F;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Work Sans', sans-serif; background:var(--sand); color:var(--ink); min-height:100vh; display:flex; align-items:stretch; justify-content:center; }
+  .wrap{ display:flex; width:100%; max-width:1180px; min-height:100vh; }
+
+  .garden{ flex:1.05; background:linear-gradient(180deg, var(--forest) 0%, var(--forest-deep) 100%); color:var(--sand); position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between; padding:56px 52px; }
+  .brand h1{ font-family:'Fraunces', serif; font-weight:500; font-size:2.5rem; line-height:1.08; }
+  .brand p.tagline{ margin-top:14px; font-size:1rem; color:var(--sand-deep); opacity:0.85; max-width:320px; line-height:1.5; }
+  .setup-note{
+    position:relative; z-index:2; background:rgba(255,255,255,0.08); border-radius:8px; padding:14px 16px;
+    font-family:'IBM Plex Mono', monospace; font-size:0.72rem; line-height:1.6; color:var(--sand-deep);
+  }
+  .setup-note b{ color:var(--brass); }
+
+  .stage{ flex:1; display:flex; align-items:center; justify-content:center; padding:40px 32px; background:var(--sand); }
+  .card{ width:100%; max-width:400px; }
+  .card > h2{ font-family:'Fraunces', serif; font-weight:500; font-size:1.65rem; margin-bottom:24px; }
+
+  .tabs{ display:flex; border-bottom:1px solid var(--line); margin-bottom:24px; gap:4px; }
+  .tab{ flex:1; background:none; border:none; font-size:0.88rem; font-weight:500; color:#8b8672; padding:12px 4px 14px; cursor:pointer; position:relative; }
+  .tab.active{ color:var(--forest); }
+  .tab.active::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--forest); }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:0.8rem; font-weight:500; color:var(--forest); margin-bottom:7px; }
+  .field input{ width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:3px; background:var(--white); font-size:0.94rem; outline:none; }
+  .field input:focus{ border-color:var(--forest); box-shadow:0 0 0 3px rgba(47,64,52,0.1); }
+  .field .hint{ margin-top:6px; font-size:0.76rem; color:#8b8672; }
+
+  .submit{ width:100%; padding:13px 14px; background:var(--forest); color:var(--sand); border:none; border-radius:3px; font-weight:600; font-size:0.94rem; cursor:pointer; margin-top:6px; }
+  .submit:hover{ background:var(--forest-deep); }
+  .submit:disabled{ background:var(--line); color:#9a927b; cursor:not-allowed; }
+  .linkbtn{ background:none; border:none; color:var(--forest); font-size:0.82rem; cursor:pointer; margin-top:12px; text-decoration:underline; }
+
+  .status{ margin-top:16px; padding:12px 14px; border-radius:5px; font-size:0.84rem; display:none; }
+  .status.show{ display:block; }
+  .status.error{ background:rgba(163,67,47,0.1); color:var(--error); }
+  .status.ok{ background:rgba(79,107,74,0.1); color:#4F6B4A; }
+
+  .flag{
+    margin-top:22px; padding:12px 14px; border:1px dashed var(--brass); border-radius:6px;
+    font-size:0.76rem; color:#7d7863; line-height:1.5; background:rgba(201,162,39,0.06);
+  }
+  .flag b{ color:var(--forest); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="garden">
+    <div class="brand">
+      <h1>Bagaicha<br>Villa</h1>
+      <p class="tagline">Sign in to tend the villa, or step in as a guest.</p>
+    </div>
+    <div class="setup-note">
+      <b>Setup checklist</b><br>
+      1. Replace SUPABASE_URL / SUPABASE_ANON_KEY below with your project's values<br>
+      2. Enable Phone (SMS OTP) auth provider in Supabase → Authentication<br>
+      3. Create staff/admin accounts manually (Dashboard → Authentication → Users) using<br>
+      &nbsp;&nbsp;email pattern: <b>&lt;staffnumber&gt;@staff.bagaichavilla.internal</b> / <b>&lt;username&gt;@admin.bagaichavilla.internal</b><br>
+      4. Insert a matching row in <b>profiles</b> for each account (role, staff_number/username, full_name)
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="card">
+      <h2 id="cardHeading">Sign in to continue</h2>
+
+      <div class="tabs">
+        <button class="tab active" data-panel="guest">Guest</button>
+        <button class="tab" data-panel="staff">Staff</button>
+        <button class="tab" data-panel="admin">Admin</button>
+      </div>
+
+      <!-- GUEST: phone OTP, two-step -->
+      <div class="panel active" id="guest">
+        <div id="guest-step-phone">
+          <div class="field">
+            <label for="guest-phone">Phone number</label>
+            <input id="guest-phone" type="tel" placeholder="+977 98XXXXXXXX">
+            <div class="hint">Include country code, e.g. +977...</div>
+          </div>
+          <button class="submit" id="sendOtpBtn">Send verification code</button>
+        </div>
+        <div id="guest-step-verify" style="display:none;">
+          <div class="field">
+            <label for="guest-name">Full name</label>
+            <input id="guest-name" type="text" placeholder="As you'd like to be addressed">
+          </div>
+          <div class="field">
+            <label for="guest-otp">Verification code</label>
+            <input id="guest-otp" type="text" inputmode="numeric" placeholder="6-digit code">
+          </div>
+          <button class="submit" id="verifyOtpBtn">Verify & continue</button>
+          <button class="linkbtn" id="backToPhone">Use a different number</button>
+        </div>
+      </div>
+
+      <!-- STAFF -->
+      <div class="panel" id="staff">
+        <div class="field">
+          <label for="staff-id">Staff number</label>
+          <input id="staff-id" type="text" placeholder="e.g. BV-014">
+        </div>
+        <div class="field">
+          <label for="staff-pin">PIN</label>
+          <input id="staff-pin" type="password" inputmode="numeric" placeholder="6-digit PIN">
+          <div class="hint">Set by admin when your account was created.</div>
+        </div>
+        <button class="submit" id="staffLoginBtn">Sign in to staff panel</button>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="panel" id="admin">
+        <div class="field">
+          <label for="admin-user">Username</label>
+          <input id="admin-user" type="text" placeholder="Admin username">
+        </div>
+        <div class="field">
+          <label for="admin-pass">Password</label>
+          <input id="admin-pass" type="password" placeholder="••••••••">
+        </div>
+        <button class="submit" id="adminLoginBtn">Sign in as admin</button>
+      </div>
+
+      <div class="status" id="statusBox"></div>
+
+      <div class="flag">
+        <b>Note:</b> the original spec had staff sign in with just staff number + name — with no secret,
+        that can't be securely authenticated, so a PIN was added (admin sets it per staff member).
+        Guest and admin logins remain exactly as specified.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // =====================================================
+  // 1. CONNECT TO YOUR SUPABASE PROJECT
+  // =====================================================
+  const SUPABASE_URL = 'https://lebefnuqlcycpeyppdln.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_kuNIOTEPsuRX_3_XZY5LAg_y8IGqy3E';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const STAFF_EMAIL_DOMAIN = '@staff.bagaichavilla.internal';
+  const ADMIN_EMAIL_DOMAIN = '@admin.bagaichavilla.internal';
+
+  // ---- Tabs ----
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const heading = document.getElementById('cardHeading');
+  const headings = { guest: 'Sign in to continue', staff: 'Staff sign in', admin: 'Admin sign in' };
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.panel).classList.add('active');
+      heading.textContent = headings[tab.dataset.panel];
+      hideStatus();
+    });
+  });
+
+  function showStatus(msg, isError){
+    const box = document.getElementById('statusBox');
+    box.textContent = msg;
+    box.className = 'status show ' + (isError ? 'error' : 'ok');
+  }
+  function hideStatus(){
+    document.getElementById('statusBox').className = 'status';
+  }
+
+  // =====================================================
+  // 2. GUEST LOGIN — phone OTP
+  // =====================================================
+  let pendingPhone = '';
+
+  document.getElementById('sendOtpBtn').addEventListener('click', async () => {
+    const phone = document.getElementById('guest-phone').value.trim();
+    if(!phone){ showStatus('Enter a phone number first.', true); return; }
+
+    const btn = document.getElementById('sendOtpBtn');
+    btn.disabled = true; btn.textContent = 'Sending...';
+
+    const { error } = await supabaseClient.auth.signInWithOtp({ phone });
+
+    btn.disabled = false; btn.textContent = 'Send verification code';
+
+    if(error){
+      showStatus(error.message, true);
+      return;
+    }
+    pendingPhone = phone;
+    document.getElementById('guest-step-phone').style.display = 'none';
+    document.getElementById('guest-step-verify').style.display = 'block';
+    showStatus('Code sent — check your SMS.', false);
+  });
+
+  document.getElementById('backToPhone').addEventListener('click', () => {
+    document.getElementById('guest-step-phone').style.display = 'block';
+    document.getElementById('guest-step-verify').style.display = 'none';
+    hideStatus();
+  });
+
+  document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
+    const name = document.getElementById('guest-name').value.trim();
+    const token = document.getElementById('guest-otp').value.trim();
+    if(!name){ showStatus('Enter your name.', true); return; }
+    if(!token){ showStatus('Enter the verification code.', true); return; }
+
+    const btn = document.getElementById('verifyOtpBtn');
+    btn.disabled = true; btn.textContent = 'Verifying...';
+
+    const { data, error } = await supabaseClient.auth.verifyOtp({ phone: pendingPhone, token, type: 'sms' });
+
+    if(error){
+      btn.disabled = false; btn.textContent = 'Verify & continue';
+      showStatus(error.message, true);
+      return;
+    }
+
+    // Create/update the profile row for this guest
+    const { error: profileError } = await supabaseClient.from('profiles').upsert({
+      id: data.user.id,
+      role: 'guest',
+      full_name: name,
+      phone: pendingPhone,
+    });
+
+    btn.disabled = false; btn.textContent = 'Verify & continue';
+
+    if(profileError){
+      showStatus('Signed in, but profile save failed: ' + profileError.message, true);
+      return;
+    }
+    showStatus('Welcome, ' + name + '! Redirect to the menu here.', false);
+  });
+
+  // =====================================================
+  // 3. STAFF LOGIN — staff number + PIN
+  // =====================================================
+  document.getElementById('staffLoginBtn').addEventListener('click', async () => {
+    const staffId = document.getElementById('staff-id').value.trim();
+    const pin = document.getElementById('staff-pin').value.trim();
+    if(!staffId || !pin){ showStatus('Enter your staff number and PIN.', true); return; }
+    if(pin.length < 6){ showStatus('PIN must be at least 6 digits.', true); return; }
+
+    const btn = document.getElementById('staffLoginBtn');
+    btn.disabled = true; btn.textContent = 'Signing in...';
+
+    const email = staffId.toLowerCase() + STAFF_EMAIL_DOMAIN;
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pin });
+
+    btn.disabled = false; btn.textContent = 'Sign in to staff panel';
+
+    if(error){
+      showStatus('Sign-in failed: ' + error.message, true);
+      return;
+    }
+    showStatus('Welcome back! Redirect to staff billing here.', false);
+  });
+
+  // =====================================================
+  // 4. ADMIN LOGIN — username + password
+  // =====================================================
+  document.getElementById('adminLoginBtn').addEventListener('click', async () => {
+    const username = document.getElementById('admin-user').value.trim();
+    const password = document.getElementById('admin-pass').value;
+    if(!username || !password){ showStatus('Enter your username and password.', true); return; }
+
+    const btn = document.getElementById('adminLoginBtn');
+    btn.disabled = true; btn.textContent = 'Signing in...';
+
+    const email = username.toLowerCase() + ADMIN_EMAIL_DOMAIN;
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    btn.disabled = false; btn.textContent = 'Sign in as admin';
+
+    if(error){
+      showStatus('Sign-in failed: ' + error.message, true);
+      return;
+    }
+    showStatus('Welcome, admin! Redirect to the admin panel here.', false);
+  });
+</script>
+
+</body>
+</html>

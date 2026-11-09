@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bagaicha Villa — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,400&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand: #F6F3EA;
+    --sand-deep: #EDE8D8;
+    --forest: #2F4034;
+    --forest-deep: #202C24;
+    --sage: #8A9A5B;
+    --brass: #C9A227;
+    --ink: #1E241D;
+    --line: #D8D2C0;
+    --white: #FFFFFF;
+    --error: #A3432F;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Work Sans', sans-serif;
+    background:var(--sand);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    align-items:stretch;
+    justify-content:center;
+  }
+  .wrap{
+    display:flex;
+    width:100%;
+    max-width:1180px;
+    min-height:100vh;
+  }
+
+  /* ---------- Left panel: garden ---------- */
+  .garden{
+    flex:1.05;
+    background:linear-gradient(180deg, var(--forest) 0%, var(--forest-deep) 100%);
+    color:var(--sand);
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding:56px 52px;
+  }
+  .garden svg.vine{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    opacity:0.5;
+  }
+  .brand{
+    position:relative;
+    z-index:2;
+  }
+  .brand .mark{
+    width:40px; height:40px;
+    margin-bottom:22px;
+  }
+  .brand h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:2.5rem;
+    line-height:1.08;
+    letter-spacing:-0.01em;
+  }
+  .brand p.tagline{
+    margin-top:14px;
+    font-size:1rem;
+    color:var(--sand-deep);
+    opacity:0.85;
+    max-width:320px;
+    line-height:1.5;
+  }
+  .garden-foot{
+    position:relative;
+    z-index:2;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--sage);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .garden-foot::before{
+    content:"";
+    width:18px; height:1px;
+    background:var(--sage);
+    display:inline-block;
+  }
+
+  /* ---------- Right panel: card ---------- */
+  .stage{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 32px;
+    background:var(--sand);
+  }
+  .card{
+    width:100%;
+    max-width:400px;
+  }
+  .card > .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--sage);
+    margin-bottom:8px;
+  }
+  .card > h2{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:1.65rem;
+    margin-bottom:28px;
+  }
+
+  .tabs{
+    display:flex;
+    border-bottom:1px solid var(--line);
+    margin-bottom:28px;
+    gap:4px;
+  }
+  .tab{
+    flex:1;
+    background:none;
+    border:none;
+    font-family:'Work Sans', sans-serif;
+    font-size:0.88rem;
+    font-weight:500;
+    color:#8b8672;
+    padding:12px 4px 14px;
+    cursor:pointer;
+    position:relative;
+    transition:color 0.2s ease;
+  }
+  .tab:hover{ color:var(--forest); }
+  .tab.active{ color:var(--forest); }
+  .tab .stem{
+    position:absolute;
+    left:0; right:0; bottom:-1px;
+    height:2px;
+    background:var(--forest);
+    transform:scaleX(0);
+    transform-origin:center;
+    transition:transform 0.32s cubic-bezier(.4,0,.2,1);
+  }
+  .tab.active .stem{ transform:scaleX(1); }
+  .tab .leaf{
+    position:absolute;
+    left:50%; bottom:-1px;
+    width:9px; height:9px;
+    transform:translate(-50%, 50%) scale(0);
+    transition:transform 0.32s cubic-bezier(.4,0,.2,1) 0.05s;
+  }
+  .tab.active .leaf{ transform:translate(-50%, 50%) scale(1); }
+  .tab .leaf svg{ width:100%; height:100%; display:block; }
+
+  .panel{ display:none; animation:fade 0.35s ease; }
+  .panel.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:block;
+    font-size:0.8rem;
+    font-weight:500;
+    color:var(--forest);
+    margin-bottom:7px;
+  }
+  .field input{
+    width:100%;
+    padding:12px 14px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:var(--white);
+    font-family:'Work Sans', sans-serif;
+    font-size:0.94rem;
+    color:var(--ink);
+    outline:none;
+    transition:border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .field input::placeholder{ color:#B7B09A; }
+  .field input:focus{
+    border-color:var(--forest);
+    box-shadow:0 0 0 3px rgba(47,64,52,0.1);
+  }
+  .field.error input{ border-color:var(--error); }
+  .field .hint{
+    margin-top:6px;
+    font-size:0.76rem;
+    color:var(--error);
+    display:none;
+  }
+  .field.error .hint{ display:block; }
+
+  .submit{
+    width:100%;
+    padding:13px 14px;
+    background:var(--forest);
+    color:var(--sand);
+    border:none;
+    border-radius:3px;
+    font-family:'Work Sans', sans-serif;
+    font-size:0.94rem;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:8px;
+    transition:background 0.18s ease, transform 0.18s ease;
+  }
+  .submit:hover{ background:var(--forest-deep); }
+  .submit:active{ transform:scale(0.99); }
+
+  .note{
+    margin-top:18px;
+    font-size:0.82rem;
+    color:#7d7863;
+    line-height:1.5;
+  }
+  .note b{ color:var(--forest); font-weight:600; }
+
+  .result{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:3px;
+    background:var(--sand-deep);
+    border:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.8rem;
+    color:var(--forest-deep);
+    display:none;
+  }
+  .result.show{ display:block; }
+
+  @media (max-width: 860px){
+    .wrap{ flex-direction:column; }
+    .garden{ padding:36px 28px; min-height:220px; }
+    .brand h1{ font-size:1.9rem; }
+    .brand p.tagline{ display:none; }
+    .garden-foot{ display:none; }
+    .stage{ padding:32px 24px 48px; }
+  }
+
+  :focus-visible{ outline:2px solid var(--brass); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="garden">
+    <svg class="vine" viewBox="0 0 500 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <path d="M -20 40 C 60 120, 20 200, 90 260 C 160 320, 120 400, 60 460 C 0 520, 50 600, 130 640 C 210 680, 170 760, 100 820 C 40 870, 70 920, 20 960"
+            fill="none" stroke="#8A9A5B" stroke-width="2" opacity="0.55" id="vinePath"/>
+      <g id="leaves"></g>
+    </svg>
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 4C20 4 8 12 8 24C8 31 13 36 20 36C27 36 32 31 32 24C32 12 20 4 20 4Z" stroke="#C9A227" stroke-width="1.4"/>
+        <path d="M20 36V16" stroke="#C9A227" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <h1>Bagaicha<br>Villa</h1>
+      <p class="tagline">Rooted in hospitality. Sign in to tend the villa, or step in as a guest.</p>
+    </div>
+    <div class="garden-foot">Est. in the garden</div>
+  </div>
+
+  <div class="stage">
+    <div class="card">
+      <div class="eyebrow">Access</div>
+      <h2>Sign in to continue</h2>
+
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-panel="guest" role="tab" aria-selected="true">
+          Guest
+          <span class="leaf"><svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#C9A227"/></svg></span>
+          <span class="stem"></span>
+        </button>
+        <button class="tab" data-panel="staff" role="tab" aria-selected="false">
+          Staff
+          <span class="leaf"><svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#C9A227"/></svg></span>
+          <span class="stem"></span>
+        </button>
+        <button class="tab" data-panel="admin" role="tab" aria-selected="false">
+          Admin
+          <span class="leaf"><svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#C9A227"/></svg></span>
+          <span class="stem"></span>
+        </button>
+      </div>
+
+      <!-- GUEST -->
+      <form class="panel active" id="guest" novalidate>
+        <div class="field" data-field="phone">
+          <label for="guest-phone">Phone number</label>
+          <input id="guest-phone" type="tel" placeholder="98XXXXXXXX" autocomplete="tel" inputmode="numeric">
+          <div class="hint">Enter a valid phone number.</div>
+        </div>
+        <div class="field" data-field="name">
+          <label for="guest-name">Full name</label>
+          <input id="guest-name" type="text" placeholder="As you'd like to be addressed" autocomplete="name">
+          <div class="hint">Please enter your name.</div>
+        </div>
+        <button type="submit" class="submit">Continue as guest</button>
+        <p class="note">First time here? Signing in creates your guest profile automatically — no separate registration needed.</p>
+      </form>
+
+      <!-- STAFF -->
+      <form class="panel" id="staff" novalidate>
+        <div class="field" data-field="staffid">
+          <label for="staff-id">Staff number</label>
+          <input id="staff-id" type="text" placeholder="e.g. BV-014" autocomplete="off">
+          <div class="hint">Enter your staff number.</div>
+        </div>
+        <div class="field" data-field="name">
+          <label for="staff-name">Full name</label>
+          <input id="staff-name" type="text" placeholder="Name on record" autocomplete="name">
+          <div class="hint">Please enter your name.</div>
+        </div>
+        <button type="submit" class="submit">Sign in to staff panel</button>
+        <p class="note">Lost your staff number? Check with <b>the front desk</b> or your supervisor.</p>
+      </form>
+
+      <!-- ADMIN -->
+      <form class="panel" id="admin" novalidate>
+        <div class="field" data-field="username">
+          <label for="admin-user">Username</label>
+          <input id="admin-user" type="text" placeholder="Admin username" autocomplete="username">
+          <div class="hint">Enter your username.</div>
+        </div>
+        <div class="field" data-field="password">
+          <label for="admin-pass">Password</label>
+          <input id="admin-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+          <div class="hint">Enter your password.</div>
+        </div>
+        <button type="submit" class="submit">Sign in as admin</button>
+        <p class="note">Super admin access controls staff accounts, inventory, and full sales records.</p>
+      </form>
+
+      <div class="result" id="result"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- Tab switching ----
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  const heading = document.querySelector('.card > h2');
+  const headings = { guest: 'Sign in to continue', staff: 'Staff sign in', admin: 'Admin sign in' };
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+      panels.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected','true');
+      const target = tab.dataset.panel;
+      document.getElementById(target).classList.add('active');
+      heading.textContent = headings[target];
+      document.getElementById('result').classList.remove('show');
+    });
+  });
+
+  // ---- Simple validation + mock submit ----
+  function validateField(fieldEl, value){
+    const isValid = value.trim().length > 0;
+    fieldEl.classList.toggle('error', !isValid);
+    return isValid;
+  }
+
+  document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const fields = form.querySelectorAll('.field');
+      let allValid = true;
+      const data = {};
+      fields.forEach(f => {
+        const input = f.querySelector('input');
+        const ok = validateField(f, input.value);
+        if(!ok) allValid = false;
+        data[f.dataset.field] = input.value;
+      });
+
+      const result = document.getElementById('result');
+      if(allValid){
+        result.classList.add('show');
+        result.textContent = '✓ ' + JSON.stringify(data);
+      } else {
+        result.classList.remove('show');
+      }
+    });
+  });
+
+  // ---- Vine leaves drawn along the path ----
+  const path = document.getElementById('vinePath');
+  const leafGroup = document.getElementById('leaves');
+  const len = path.getTotalLength();
+  const leafCount = 9;
+  for(let i=0; i<leafCount; i++){
+    const pt = path.getPointAtLength((len / leafCount) * i);
+    const leaf = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    leaf.setAttribute('cx', pt.x);
+    leaf.setAttribute('cy', pt.y);
+    leaf.setAttribute('r', i % 3 === 0 ? 3.2 : 2);
+    leaf.setAttribute('fill', i % 4 === 0 ? '#C9A227' : '#8A9A5B');
+    leaf.setAttribute('opacity', '0.7');
+    leafGroup.appendChild(leaf);
+  }
+</script>
+
+</body>
+</html>

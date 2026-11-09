@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bagaicha Villa — Admin · Appearance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#F6F3EA; --sand-deep:#EDE8D8; --forest:#2F4034; --forest-deep:#202C24;
+    --sage:#8A9A5B; --brass:#C9A227; --ink:#1E241D; --line:#D8D2C0; --white:#FFFFFF; --error:#A3432F;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Work Sans', sans-serif; background:var(--sand); color:var(--ink); }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:16px 28px; background:var(--forest); color:var(--sand); }
+  .who{ display:flex; align-items:center; gap:12px; }
+  .who .mark{ width:26px; height:26px; }
+  .who h1{ font-family:'Fraunces', serif; font-weight:500; font-size:1.15rem; }
+  .who .sub{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--sage); }
+  .navchips{ display:flex; gap:8px; }
+  .navchip{ padding:7px 14px; border-radius:20px; font-size:0.8rem; background:rgba(255,255,255,0.1); color:var(--sand); }
+  .navchip.active{ background:var(--brass); color:var(--forest-deep); font-weight:600; }
+
+  .layout{ display:flex; min-height:calc(100vh - 60px); gap:0; }
+  .preview-side{
+    flex:1; padding:34px; display:flex; flex-direction:column; align-items:center;
+  }
+  .preview-side .eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--sage); align-self:flex-start; margin-bottom:6px;}
+  .preview-side h2{ font-family:'Fraunces', serif; font-weight:500; font-size:1.3rem; align-self:flex-start; margin-bottom:24px; }
+
+  .phone{
+    width:280px; height:560px; border-radius:32px; background:var(--forest-deep);
+    padding:12px; box-shadow:0 20px 50px rgba(32,44,36,0.25);
+  }
+  .phone-screen{
+    width:100%; height:100%; border-radius:22px; overflow:hidden; position:relative;
+    background-size:cover; background-position:center; background-color:var(--sand-deep);
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .phone-screen::before{
+    content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(32,44,36,0.55), rgba(32,44,36,0.15) 40%, rgba(32,44,36,0.6));
+  }
+  .phone-top, .phone-bottom{ position:relative; z-index:2; padding:18px; color:var(--sand); }
+  .phone-top .tabname{ font-family:'Fraunces', serif; font-size:1.2rem; font-weight:500; }
+  .phone-top .tabsub{ font-family:'IBM Plex Mono', monospace; font-size:0.68rem; color:var(--sage); margin-top:2px; }
+  .phone-bottom{ display:flex; gap:8px; justify-content:center; }
+  .navdot{ width:34px; height:4px; border-radius:2px; background:rgba(255,255,255,0.3); }
+  .navdot.active{ background:var(--brass); }
+  .noimg-label{
+    position:relative; z-index:2; margin:auto; color:rgba(246,243,234,0.6); font-size:0.8rem; text-align:center;
+  }
+
+  .list-side{ width:400px; background:var(--white); border-left:1px solid var(--line); padding:30px 26px 40px; overflow-y:auto; }
+  .list-side .eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--sage); }
+  .list-side h2{ font-family:'Fraunces', serif; font-weight:500; font-size:1.3rem; margin:4px 0 20px; }
+
+  .tab-row{
+    display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--line); border-radius:10px;
+    margin-bottom:12px; cursor:pointer; transition:border-color 0.15s ease;
+  }
+  .tab-row.selected{ border-color:var(--forest); background:var(--sand); }
+  .tab-row:hover{ border-color:var(--forest); }
+  .tab-thumb{
+    width:52px; height:52px; border-radius:8px; flex:0 0 auto; background-size:cover; background-position:center;
+    background-color:var(--sage); display:flex; align-items:center; justify-content:center;
+  }
+  .tab-thumb svg{ width:20px; height:20px; opacity:0.85; }
+  .tab-info{ flex:1; min-width:0; }
+  .tab-info .tname{ font-weight:600; font-size:0.92rem; }
+  .tab-info .tstatus{ font-size:0.76rem; color:#8b8672; margin-top:2px; }
+  .tab-actions{ display:flex; gap:6px; }
+  .tab-actions button{
+    font-size:0.74rem; padding:6px 10px; border-radius:6px; border:1px solid var(--line);
+    background:var(--sand); cursor:pointer; color:var(--forest); font-weight:500;
+  }
+  .tab-actions button.remove{ color:var(--error); }
+  .tab-actions input[type=file]{ display:none; }
+
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--forest-deep); color:var(--sand); padding:12px 20px; border-radius:6px;
+    font-size:0.85rem; opacity:0; transition:all 0.25s ease; pointer-events:none; font-family:'IBM Plex Mono', monospace;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width: 900px){
+    .layout{ flex-direction:column; }
+    .list-side{ width:auto; border-left:none; border-top:1px solid var(--line); }
+    .preview-side{ padding:26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="who">
+    <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 4C20 4 8 12 8 24C8 31 13 36 20 36C27 36 32 31 32 24C32 12 20 4 20 4Z" stroke="#C9A227" stroke-width="1.6"/>
+      <path d="M20 36V16" stroke="#C9A227" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>Bagaicha Villa — Admin</h1>
+      <div class="sub">Signed in as super admin</div>
+    </div>
+  </div>
+  <div class="navchips">
+    <div class="navchip">Menu</div>
+    <div class="navchip">Inventory</div>
+    <div class="navchip">Sales & Audit</div>
+    <div class="navchip">Social feed</div>
+    <div class="navchip active">Appearance</div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="preview-side">
+    <div class="eyebrow">Live preview</div>
+    <h2 id="previewTitle">Home tab</h2>
+    <div class="phone">
+      <div class="phone-screen" id="phoneScreen">
+        <div class="phone-top">
+          <div class="tabname" id="phoneTabName">Home</div>
+          <div class="tabsub">Bagaicha Villa</div>
+        </div>
+        <div class="noimg-label" id="noImgLabel">No background set — showing default garden green</div>
+        <div class="phone-bottom" id="phoneDots"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="list-side">
+    <div class="eyebrow">Customize</div>
+    <h2>Tab backgrounds</h2>
+    <div id="tabList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const tabs = [
+    { key:'home', name:'Home', image:null },
+    { key:'menu', name:'Menu', image:null },
+    { key:'order', name:'Order & Cart', image:null },
+    { key:'social', name:'Social feed', image:null },
+    { key:'profile', name:'Profile', image:null },
+  ];
+  let selected = 'home';
+
+  function leafIcon(){
+    return `<svg viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 5 6 5 13C5 17 8 20 12 20C16 20 19 17 19 13C19 6 12 2 12 2Z" stroke="#F6F3EA" stroke-width="1.4"/><path d="M12 20V9" stroke="#F6F3EA" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+  }
+
+  function renderTabList(){
+    const wrap = document.getElementById('tabList');
+    wrap.innerHTML = '';
+    tabs.forEach(t => {
+      const row = document.createElement('div');
+      row.className = 'tab-row' + (t.key === selected ? ' selected' : '');
+      row.innerHTML = `
+        <div class="tab-thumb" style="${t.image ? `background-image:url(${t.image})` : ''}">${t.image ? '' : leafIcon()}</div>
+        <div class="tab-info">
+          <div class="tname">${t.name}</div>
+          <div class="tstatus">${t.image ? 'Custom background set' : 'Using default'}</div>
+        </div>
+        <div class="tab-actions">
+          <button class="upload-btn">${t.image ? 'Change' : 'Upload'}</button>
+          ${t.image ? '<button class="remove">Remove</button>' : ''}
+          <input type="file" accept="image/*" class="file-input">
+        </div>
+      `;
+      row.addEventListener('click', (e) => {
+        if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+        selected = t.key;
+        renderTabList();
+        renderPreview();
+      });
+      row.querySelector('.upload-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        row.querySelector('.file-input').click();
+      });
+      row.querySelector('.file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          t.image = ev.target.result;
+          selected = t.key;
+          renderTabList();
+          renderPreview();
+          showToast(`Background updated for the ${t.name} tab.`);
+        };
+        reader.readAsDataURL(file);
+      });
+      const removeBtn = row.querySelector('.remove');
+      if(removeBtn){
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          t.image = null;
+          renderTabList();
+          renderPreview();
+          showToast(`Background removed for the ${t.name} tab.`);
+        });
+      }
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderPreview(){
+    const t = tabs.find(x => x.key === selected);
+    document.getElementById('previewTitle').textContent = t.name + ' tab';
+    document.getElementById('phoneTabName').textContent = t.name;
+    const screen = document.getElementById('phoneScreen');
+    screen.style.backgroundImage = t.image ? `url(${t.image})` : 'none';
+    document.getElementById('noImgLabel').style.display = t.image ? 'none' : 'block';
+
+    const dots = document.getElementById('phoneDots');
+    dots.innerHTML = '';
+    tabs.forEach(x => {
+      const d = document.createElement('div');
+      d.className = 'navdot' + (x.key === selected ? ' active' : '');
+      dots.appendChild(d);
+    });
+  }
+
+  function showToast(msg){
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  renderTabList();
+  renderPreview();
+</script>
+
+</body>
+</html>

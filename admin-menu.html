@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bagaicha Villa — Admin · Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#F6F3EA; --sand-deep:#EDE8D8; --forest:#2F4034; --forest-deep:#202C24;
+    --sage:#8A9A5B; --brass:#C9A227; --ink:#1E241D; --line:#D8D2C0; --white:#FFFFFF;
+    --error:#A3432F; --ok:#4F6B4A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Work Sans', sans-serif; background:var(--sand); color:var(--ink); }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px; background:var(--forest); color:var(--sand);
+  }
+  .who{ display:flex; align-items:center; gap:12px; }
+  .who .mark{ width:26px; height:26px; }
+  .who h1{ font-family:'Fraunces', serif; font-weight:500; font-size:1.15rem; }
+  .who .sub{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--sage); }
+  .navchips{ display:flex; gap:8px; }
+  .navchip{ padding:7px 14px; border-radius:20px; font-size:0.8rem; background:rgba(255,255,255,0.1); color:var(--sand); }
+  .navchip.active{ background:var(--brass); color:var(--forest-deep); font-weight:600; }
+
+  .layout{ display:flex; min-height:calc(100vh - 60px); }
+  .list-side{ flex:1.3; padding:26px 30px; }
+  .form-side{ flex:1; min-width:340px; max-width:400px; background:var(--white); border-left:1px solid var(--line); padding:26px 26px 40px; }
+
+  .list-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .list-head h2{ font-family:'Fraunces', serif; font-weight:500; font-size:1.4rem; }
+  .count{ font-family:'IBM Plex Mono', monospace; font-size:0.78rem; color:var(--sage); }
+
+  .cat-block{ margin-bottom:26px; }
+  .cat-title{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--sage); margin-bottom:10px; }
+  .dish-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:14px; }
+  .dish-card{
+    background:var(--white); border:1px solid var(--line); border-radius:10px; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .dish-photo{
+    height:110px; background:linear-gradient(135deg, var(--sage), var(--forest));
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .dish-photo img{ width:100%; height:100%; object-fit:cover; }
+  .dish-photo svg{ width:30px; height:30px; opacity:0.85; }
+  .dish-body{ padding:12px 14px; }
+  .dish-body .dname{ font-weight:600; font-size:0.94rem; }
+  .dish-body .dprice{ font-family:'IBM Plex Mono', monospace; font-size:0.85rem; color:var(--forest); margin-top:3px; }
+  .dish-actions{ display:flex; border-top:1px solid var(--sand-deep); }
+  .dish-actions button{
+    flex:1; padding:9px; border:none; background:var(--white); font-size:0.78rem; cursor:pointer;
+    color:var(--forest); font-weight:500;
+  }
+  .dish-actions button.del{ color:var(--error); border-left:1px solid var(--sand-deep); }
+  .dish-actions button:hover{ background:var(--sand); }
+
+  .empty-cat{ font-size:0.85rem; color:#9a927b; padding:10px 0; }
+
+  /* ---- Form ---- */
+  .form-side .eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--sage); }
+  .form-side h2{ font-family:'Fraunces', serif; font-weight:500; font-size:1.3rem; margin:4px 0 22px; }
+
+  .photo-upload{
+    width:100%; height:150px; border:1.5px dashed var(--line); border-radius:8px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer; position:relative; overflow:hidden; margin-bottom:18px; background:var(--sand);
+    transition:border-color 0.15s ease;
+  }
+  .photo-upload:hover{ border-color:var(--forest); }
+  .photo-upload img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .photo-upload .ph-label{ font-size:0.82rem; color:#8b8672; text-align:center; padding:0 20px; }
+  .photo-upload .ph-label b{ color:var(--forest); }
+  .photo-upload input[type=file]{ display:none; }
+  .photo-upload .ph-remove{
+    position:absolute; top:8px; right:8px; background:rgba(32,44,36,0.75); color:var(--sand);
+    border:none; border-radius:50%; width:24px; height:24px; font-size:0.8rem; cursor:pointer; display:none;
+  }
+  .photo-upload.has-photo .ph-remove{ display:block; }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:0.8rem; font-weight:500; color:var(--forest); margin-bottom:7px; }
+  .field input, .field select{
+    width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:5px;
+    background:var(--white); font-family:'Work Sans', sans-serif; font-size:0.9rem; color:var(--ink); outline:none;
+  }
+  .field input:focus, .field select:focus{ border-color:var(--forest); box-shadow:0 0 0 3px rgba(47,64,52,0.1); }
+  .field .hint{ margin-top:6px; font-size:0.76rem; color:var(--error); display:none; }
+  .field.error input{ border-color:var(--error); }
+  .field.error .hint{ display:block; }
+
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .submit{
+    width:100%; padding:13px 14px; background:var(--forest); color:var(--sand); border:none;
+    border-radius:5px; font-weight:600; font-size:0.92rem; cursor:pointer; margin-top:6px;
+  }
+  .submit:hover{ background:var(--forest-deep); }
+  .cancel-edit{ width:100%; padding:10px; background:none; border:none; color:#8b8672; font-size:0.82rem; cursor:pointer; margin-top:8px; display:none; }
+  .cancel-edit.show{ display:block; }
+
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--forest-deep); color:var(--sand); padding:12px 20px; border-radius:6px;
+    font-size:0.85rem; opacity:0; transition:all 0.25s ease; pointer-events:none; font-family:'IBM Plex Mono', monospace;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width: 880px){
+    .layout{ flex-direction:column; }
+    .form-side{ max-width:none; border-left:none; border-top:1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="who">
+    <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 4C20 4 8 12 8 24C8 31 13 36 20 36C27 36 32 31 32 24C32 12 20 4 20 4Z" stroke="#C9A227" stroke-width="1.6"/>
+      <path d="M20 36V16" stroke="#C9A227" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>Bagaicha Villa — Admin</h1>
+      <div class="sub">Signed in as super admin</div>
+    </div>
+  </div>
+  <div class="navchips">
+    <div class="navchip active">Menu</div>
+    <div class="navchip">Inventory</div>
+    <div class="navchip">Sales & Audit</div>
+    <div class="navchip">Social feed</div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="list-side">
+    <div class="list-head">
+      <h2>Menu</h2>
+      <div class="count" id="dishCount">0 dishes</div>
+    </div>
+    <div id="menuLists"></div>
+  </div>
+
+  <div class="form-side">
+    <div class="eyebrow" id="formEyebrow">New dish</div>
+    <h2 id="formTitle">Add a dish</h2>
+
+    <label class="photo-upload" id="photoUpload">
+      <input type="file" id="photoInput" accept="image/*">
+      <img id="photoPreview" style="display:none;">
+      <span class="ph-label" id="photoLabel"><b>Tap to upload</b><br>a photo from your device</span>
+      <button type="button" class="ph-remove" id="photoRemove">✕</button>
+    </label>
+
+    <div class="field" data-field="name">
+      <label for="dname">Dish name</label>
+      <input id="dname" type="text" placeholder="e.g. Grilled Trout">
+      <div class="hint">Enter a dish name.</div>
+    </div>
+
+    <div class="row2">
+      <div class="field" data-field="price">
+        <label for="dprice">Price (Rs)</label>
+        <input id="dprice" type="number" min="0" placeholder="0">
+        <div class="hint">Enter a valid price.</div>
+      </div>
+      <div class="field" data-field="category">
+        <label for="dcat">Category</label>
+        <select id="dcat">
+          <option>Starters</option>
+          <option>Mains</option>
+          <option>Drinks</option>
+          <option>Desserts</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="submit" id="saveDish">Add to menu</button>
+    <button class="cancel-edit" id="cancelEdit">Cancel editing</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let dishes = [
+    { id:1, name:'Momo (Veg)', price:180, category:'Starters', photo:null },
+    { id:2, name:'Dal Bhat Set', price:350, category:'Mains', photo:null },
+    { id:3, name:'Masala Chai', price:80, category:'Drinks', photo:null },
+    { id:4, name:'Sel Roti & Honey', price:140, category:'Desserts', photo:null },
+  ];
+  let nextId = 5;
+  let editingId = null;
+  let currentPhoto = null;
+  const categories = ['Starters','Mains','Drinks','Desserts'];
+
+  function leafIcon(){
+    return `<svg viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 5 6 5 13C5 17 8 20 12 20C16 20 19 17 19 13C19 6 12 2 12 2Z" stroke="#F6F3EA" stroke-width="1.4"/><path d="M12 20V9" stroke="#F6F3EA" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+  }
+
+  function renderList(){
+    const wrap = document.getElementById('menuLists');
+    wrap.innerHTML = '';
+    let total = 0;
+    categories.forEach(cat => {
+      const items = dishes.filter(d => d.category === cat);
+      total += items.length;
+      const block = document.createElement('div');
+      block.className = 'cat-block';
+      let inner = `<div class="cat-title">${cat}</div>`;
+      if(items.length === 0){
+        inner += `<div class="empty-cat">No dishes yet in this category.</div>`;
+      } else {
+        inner += '<div class="dish-grid">';
+        items.forEach(d => {
+          inner += `
+            <div class="dish-card">
+              <div class="dish-photo">${d.photo ? `<img src="${d.photo}">` : leafIcon()}</div>
+              <div class="dish-body">
+                <div class="dname">${d.name}</div>
+                <div class="dprice">Rs ${d.price}</div>
+              </div>
+              <div class="dish-actions">
+                <button data-edit="${d.id}">Edit</button>
+                <button data-del="${d.id}" class="del">Remove</button>
+              </div>
+            </div>`;
+        });
+        inner += '</div>';
+      }
+      block.innerHTML = inner;
+      wrap.appendChild(block);
+    });
+    document.getElementById('dishCount').textContent = total + (total === 1 ? ' dish' : ' dishes');
+
+    wrap.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => startEdit(Number(btn.dataset.edit)));
+    });
+    wrap.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const d = dishes.find(x => x.id === Number(btn.dataset.del));
+        dishes = dishes.filter(x => x.id !== Number(btn.dataset.del));
+        renderList();
+        showToast(`Removed "${d.name}" from the menu.`);
+        if(editingId === d.id) resetForm();
+      });
+    });
+  }
+
+  function startEdit(id){
+    const d = dishes.find(x => x.id === id);
+    if(!d) return;
+    editingId = id;
+    document.getElementById('formEyebrow').textContent = 'Editing dish';
+    document.getElementById('formTitle').textContent = 'Edit dish';
+    document.getElementById('dname').value = d.name;
+    document.getElementById('dprice').value = d.price;
+    document.getElementById('dcat').value = d.category;
+    currentPhoto = d.photo;
+    updatePhotoPreview();
+    document.getElementById('saveDish').textContent = 'Save changes';
+    document.getElementById('cancelEdit').classList.add('show');
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }
+
+  function resetForm(){
+    editingId = null;
+    currentPhoto = null;
+    document.getElementById('formEyebrow').textContent = 'New dish';
+    document.getElementById('formTitle').textContent = 'Add a dish';
+    document.getElementById('dname').value = '';
+    document.getElementById('dprice').value = '';
+    document.getElementById('dcat').value = 'Starters';
+    document.getElementById('saveDish').textContent = 'Add to menu';
+    document.getElementById('cancelEdit').classList.remove('show');
+    document.querySelectorAll('.field').forEach(f => f.classList.remove('error'));
+    updatePhotoPreview();
+  }
+
+  function updatePhotoPreview(){
+    const upload = document.getElementById('photoUpload');
+    const preview = document.getElementById('photoPreview');
+    const label = document.getElementById('photoLabel');
+    if(currentPhoto){
+      preview.src = currentPhoto;
+      preview.style.display = 'block';
+      label.style.display = 'none';
+      upload.classList.add('has-photo');
+    } else {
+      preview.style.display = 'none';
+      label.style.display = 'block';
+      upload.classList.remove('has-photo');
+    }
+  }
+
+  document.getElementById('photoInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      currentPhoto = ev.target.result;
+      updatePhotoPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('photoRemove').addEventListener('click', (e) => {
+    e.preventDefault();
+    currentPhoto = null;
+    document.getElementById('photoInput').value = '';
+    updatePhotoPreview();
+  });
+
+  document.getElementById('cancelEdit').addEventListener('click', resetForm);
+
+  document.getElementById('saveDish').addEventListener('click', () => {
+    const nameField = document.querySelector('[data-field="name"]');
+    const priceField = document.querySelector('[data-field="price"]');
+    const nameVal = document.getElementById('dname').value.trim();
+    const priceVal = document.getElementById('dprice').value;
+    const catVal = document.getElementById('dcat').value;
+
+    let valid = true;
+    nameField.classList.toggle('error', nameVal.length === 0);
+    if(nameVal.length === 0) valid = false;
+    priceField.classList.toggle('error', !(priceVal && Number(priceVal) > 0));
+    if(!(priceVal && Number(priceVal) > 0)) valid = false;
+    if(!valid) return;
+
+    if(editingId){
+      const d = dishes.find(x => x.id === editingId);
+      d.name = nameVal; d.price = Number(priceVal); d.category = catVal; d.photo = currentPhoto;
+      showToast(`Saved changes to "${nameVal}".`);
+    } else {
+      dishes.push({ id:nextId++, name:nameVal, price:Number(priceVal), category:catVal, photo:currentPhoto });
+      showToast(`"${nameVal}" added to the menu.`);
+    }
+    renderList();
+    resetForm();
+  });
+
+  function showToast(msg){
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  renderList();
+</script>
+
+</body>
+</html>

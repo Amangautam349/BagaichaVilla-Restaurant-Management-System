@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bagaicha Villa — Admin · Sales & Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#F6F3EA; --sand-deep:#EDE8D8; --forest:#2F4034; --forest-deep:#202C24;
+    --sage:#8A9A5B; --brass:#C9A227; --ink:#1E241D; --line:#D8D2C0; --white:#FFFFFF;
+    --error:#A3432F; --warn:#B7791F; --ok:#4F6B4A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Work Sans', sans-serif; background:var(--sand); color:var(--ink); }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:16px 28px; background:var(--forest); color:var(--sand); }
+  .who{ display:flex; align-items:center; gap:12px; }
+  .who .mark{ width:26px; height:26px; }
+  .who h1{ font-family:'Fraunces', serif; font-weight:500; font-size:1.15rem; }
+  .who .sub{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--sage); }
+  .navchips{ display:flex; gap:8px; }
+  .navchip{ padding:7px 14px; border-radius:20px; font-size:0.8rem; background:rgba(255,255,255,0.1); color:var(--sand); }
+  .navchip.active{ background:var(--brass); color:var(--forest-deep); font-weight:600; }
+
+  .content{ padding:28px 32px 60px; max-width:1200px; margin:0 auto; }
+
+  .page-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .page-head h2{ font-family:'Fraunces', serif; font-weight:500; font-size:1.5rem; }
+  .range{ display:flex; gap:6px; }
+  .rchip{ padding:7px 13px; border-radius:20px; font-size:0.78rem; border:1px solid var(--line); background:var(--white); cursor:pointer; }
+  .rchip.active{ background:var(--forest); color:var(--sand); border-color:var(--forest); }
+
+  .kpi-row{ display:flex; gap:14px; margin-bottom:26px; flex-wrap:wrap; }
+  .kpi{ flex:1; min-width:150px; background:var(--white); border:1px solid var(--line); border-radius:10px; padding:16px 18px; }
+  .kpi .klabel{ font-family:'IBM Plex Mono', monospace; font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--sage); }
+  .kpi .kval{ font-family:'Fraunces', serif; font-weight:500; font-size:1.7rem; margin-top:4px; }
+  .kpi .ksub{ font-size:0.74rem; color:#8b8672; margin-top:2px; }
+
+  .grid2{ display:grid; grid-template-columns:1.3fr 1fr; gap:20px; margin-bottom:26px; }
+
+  .panel{ background:var(--white); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  .panel h3{ font-family:'Fraunces', serif; font-weight:500; font-size:1.05rem; margin-bottom:16px; }
+
+  .bars{ display:flex; align-items:flex-end; gap:10px; height:150px; }
+  .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; justify-content:flex-end; }
+  .bar{ width:100%; max-width:34px; background:var(--sage); border-radius:4px 4px 0 0; transition:background 0.15s ease; }
+  .bar-col:hover .bar{ background:var(--forest); }
+  .bar-label{ font-family:'IBM Plex Mono', monospace; font-size:0.68rem; color:#8b8672; }
+
+  .paymethods{ display:flex; flex-direction:column; gap:12px; }
+  .pmrow{ display:flex; align-items:center; gap:10px; }
+  .pmname{ width:110px; font-size:0.85rem; }
+  .pmbarwrap{ flex:1; height:10px; background:var(--sand-deep); border-radius:5px; overflow:hidden; }
+  .pmbar{ height:100%; background:var(--forest); border-radius:5px; }
+  .pmpct{ width:42px; text-align:right; font-family:'IBM Plex Mono', monospace; font-size:0.78rem; color:var(--forest); }
+
+  table{ width:100%; border-collapse:collapse; }
+  thead th{
+    text-align:left; font-family:'IBM Plex Mono', monospace; font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--sage); padding:10px 12px; border-bottom:1px solid var(--line);
+  }
+  tbody td{ padding:10px 12px; font-size:0.85rem; border-bottom:1px solid var(--sand-deep); }
+  tbody tr:last-child td{ border-bottom:none; }
+  .badge{ display:inline-block; padding:3px 9px; border-radius:12px; font-size:0.7rem; font-weight:600; }
+  .badge.paid{ background:rgba(79,107,74,0.12); color:var(--ok); }
+  .badge.pending{ background:rgba(183,121,31,0.14); color:var(--warn); }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  .audit-row{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--sand-deep); font-size:0.85rem; }
+  .audit-row:last-child{ border-bottom:none; }
+  .audit-item{ flex:1; }
+  .audit-item .ainame{ font-weight:600; }
+  .audit-item .aisub{ font-size:0.74rem; color:#8b8672; margin-top:2px; }
+  .audit-variance{ font-family:'IBM Plex Mono', monospace; font-size:0.85rem; font-weight:600; }
+  .audit-variance.ok{ color:var(--ok); }
+  .audit-variance.warn{ color:var(--warn); }
+  .audit-variance.err{ color:var(--error); }
+
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--forest-deep); color:var(--sand); padding:12px 20px; border-radius:6px;
+    font-size:0.85rem; opacity:0; transition:all 0.25s ease; pointer-events:none; font-family:'IBM Plex Mono', monospace;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width: 900px){
+    .grid2{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="who">
+    <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 4C20 4 8 12 8 24C8 31 13 36 20 36C27 36 32 31 32 24C32 12 20 4 20 4Z" stroke="#C9A227" stroke-width="1.6"/>
+      <path d="M20 36V16" stroke="#C9A227" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>Bagaicha Villa — Admin</h1>
+      <div class="sub">Signed in as super admin</div>
+    </div>
+  </div>
+  <div class="navchips">
+    <div class="navchip">Menu</div>
+    <div class="navchip">Inventory</div>
+    <div class="navchip active">Sales & Audit</div>
+    <div class="navchip">Social feed</div>
+    <div class="navchip">Appearance</div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="page-head">
+    <h2>Sales & Audit</h2>
+    <div class="range">
+      <div class="rchip" data-r="today">Today</div>
+      <div class="rchip active" data-r="week">This week</div>
+      <div class="rchip" data-r="month">This month</div>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="klabel">Total sales</div><div class="kval" id="kpiSales">Rs 0</div><div class="ksub" id="kpiSalesSub">vs last period</div></div>
+    <div class="kpi"><div class="klabel">Orders</div><div class="kval" id="kpiOrders">0</div><div class="ksub">bills recorded</div></div>
+    <div class="kpi"><div class="klabel">Avg bill</div><div class="kval" id="kpiAvg">Rs 0</div><div class="ksub">per order</div></div>
+    <div class="kpi"><div class="klabel">Pending payments</div><div class="kval" id="kpiPending">0</div><div class="ksub">awaiting settlement</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>Sales this week</h3>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="panel">
+      <h3>Payment method split</h3>
+      <div class="paymethods" id="paymethods"></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>Recent bills</h3>
+      <table>
+        <thead><tr><th>Bill</th><th>Staff / source</th><th>Items</th><th>Total</th><th>Method</th><th>Status</th></tr></thead>
+        <tbody id="billsBody"></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Inventory audit — expected vs actual</h3>
+      <div id="auditList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const weekData = [
+    { day:'Mon', sales:18400 },
+    { day:'Tue', sales:15200 },
+    { day:'Wed', sales:21800 },
+    { day:'Thu', sales:19600 },
+    { day:'Fri', sales:27300 },
+    { day:'Sat', sales:34100 },
+    { day:'Sun', sales:29800 },
+  ];
+
+  const payBreakdown = [
+    { method:'Cash', pct:38 },
+    { method:'eSewa', pct:27 },
+    { method:'Khalti', pct:19 },
+    { method:'Bank Transfer', pct:16 },
+  ];
+
+  const bills = [
+    { id:'BV-0041', source:'Staff · Anjali', items:4, total:1240, method:'Cash', status:'paid' },
+    { id:'BV-0042', source:'Guest · Sujata (online)', items:2, total:610, method:'eSewa', status:'paid' },
+    { id:'BV-0043', source:'Staff · Ramesh', items:6, total:2180, method:'Bank Transfer', status:'pending' },
+    { id:'BV-0044', source:'Guest · Prakash (online)', items:3, total:940, method:'Khalti', status:'paid' },
+    { id:'BV-0045', source:'Staff · Anjali', items:1, total:180, method:'Cash', status:'pending' },
+  ];
+
+  const auditItems = [
+    { name:'Basmati Rice', expected:38, actual:35, unit:'kg' },
+    { name:'Chicken (fresh)', expected:9, actual:6, unit:'kg' },
+    { name:'Whole Milk', expected:5, actual:0, unit:'litre' },
+    { name:'Red Onion', expected:22, actual:22, unit:'kg' },
+    { name:'Paneer', expected:5, actual:4, unit:'kg' },
+  ];
+
+  function renderKPIs(){
+    const total = weekData.reduce((a,b) => a + b.sales, 0);
+    const orders = bills.length;
+    const avg = Math.round(total / (weekData.length * 6)); // mock avg per bill
+    const pending = bills.filter(b => b.status === 'pending').length;
+    document.getElementById('kpiSales').textContent = 'Rs ' + total.toLocaleString();
+    document.getElementById('kpiOrders').textContent = (weekData.length * 6);
+    document.getElementById('kpiAvg').textContent = 'Rs ' + avg.toLocaleString();
+    document.getElementById('kpiPending').textContent = pending;
+  }
+
+  function renderBars(){
+    const wrap = document.getElementById('bars');
+    wrap.innerHTML = '';
+    const max = Math.max(...weekData.map(d => d.sales));
+    weekData.forEach(d => {
+      const col = document.createElement('div');
+      col.className = 'bar-col';
+      const h = Math.round((d.sales / max) * 120);
+      col.innerHTML = `<div class="bar" style="height:${h}px" title="Rs ${d.sales}"></div><div class="bar-label">${d.day}</div>`;
+      wrap.appendChild(col);
+    });
+  }
+
+  function renderPayMethods(){
+    const wrap = document.getElementById('paymethods');
+    wrap.innerHTML = '';
+    payBreakdown.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'pmrow';
+      row.innerHTML = `
+        <div class="pmname">${p.method}</div>
+        <div class="pmbarwrap"><div class="pmbar" style="width:${p.pct}%"></div></div>
+        <div class="pmpct">${p.pct}%</div>
+      `;
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderBills(){
+    const body = document.getElementById('billsBody');
+    body.innerHTML = '';
+    bills.forEach(b => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="mono">${b.id}</td>
+        <td>${b.source}</td>
+        <td class="mono">${b.items}</td>
+        <td class="mono">Rs ${b.total}</td>
+        <td>${b.method}</td>
+        <td><span class="badge ${b.status}">${b.status === 'paid' ? 'Paid' : 'Pending'}</span></td>
+      `;
+      body.appendChild(row);
+    });
+  }
+
+  function renderAudit(){
+    const wrap = document.getElementById('auditList');
+    wrap.innerHTML = '';
+    auditItems.forEach(a => {
+      const diff = a.actual - a.expected;
+      let cls = 'ok', label = 'Matches';
+      if(diff < 0 && diff >= -2){ cls = 'warn'; label = `${diff} ${a.unit}`; }
+      else if(diff < -2){ cls = 'err'; label = `${diff} ${a.unit}`; }
+      else if(diff === 0){ label = 'Matches'; }
+      else { label = `+${diff} ${a.unit}`; }
+
+      const row = document.createElement('div');
+      row.className = 'audit-row';
+      row.innerHTML = `
+        <div class="audit-item">
+          <div class="ainame">${a.name}</div>
+          <div class="aisub">Expected ${a.expected} ${a.unit} · Actual ${a.actual} ${a.unit}</div>
+        </div>
+        <div class="audit-variance ${cls}">${label}</div>
+      `;
+      wrap.appendChild(row);
+    });
+  }
+
+  document.querySelectorAll('.rchip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.rchip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      showToast(`Showing figures for "${chip.textContent}" (demo data unchanged).`);
+    });
+  });
+
+  function showToast(msg){
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  renderKPIs();
+  renderBars();
+  renderPayMethods();
+  renderBills();
+  renderAudit();
+</script>
+
+</body>
+</html>

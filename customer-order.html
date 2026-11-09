@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bagaicha Villa — Order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#F6F3EA; --sand-deep:#EDE8D8; --forest:#2F4034; --forest-deep:#202C24;
+    --sage:#8A9A5B; --brass:#C9A227; --ink:#1E241D; --line:#D8D2C0; --white:#FFFFFF;
+    --error:#A3432F; --ok:#4F6B4A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Work Sans', sans-serif; background:var(--sand); color:var(--ink); }
+  .app{ max-width:480px; margin:0 auto; min-height:100vh; background:var(--sand); position:relative; padding-bottom:84px; }
+
+  /* ---- Header ---- */
+  header{
+    background:var(--forest); color:var(--sand); padding:20px 20px 16px;
+    border-radius:0 0 16px 16px;
+  }
+  header .row1{ display:flex; align-items:center; justify-content:space-between; }
+  header .brand{ display:flex; align-items:center; gap:8px; }
+  header .brand svg{ width:22px; height:22px; }
+  header .brand span{ font-family:'Fraunces', serif; font-weight:500; font-size:1.05rem; }
+  header .greet{ font-family:'IBM Plex Mono', monospace; font-size:0.7rem; color:var(--sage); margin-top:2px; }
+
+  .catbar{ display:flex; gap:8px; margin-top:16px; overflow-x:auto; padding-bottom:2px; }
+  .catbar::-webkit-scrollbar{ display:none; }
+  .catchip{
+    flex:0 0 auto; padding:7px 14px; border-radius:20px; font-size:0.8rem;
+    background:rgba(255,255,255,0.1); color:var(--sand); cursor:pointer; white-space:nowrap;
+  }
+  .catchip.active{ background:var(--brass); color:var(--forest-deep); font-weight:600; }
+
+  /* ---- Menu list ---- */
+  .menu{ padding:18px 18px 8px; }
+  .item{
+    display:flex; gap:12px; background:var(--white); border:1px solid var(--line);
+    border-radius:10px; padding:10px; margin-bottom:12px; align-items:center;
+  }
+  .thumb{
+    width:64px; height:64px; border-radius:8px; flex:0 0 auto;
+    background:linear-gradient(135deg, var(--sage), var(--forest));
+    display:flex; align-items:center; justify-content:center;
+  }
+  .thumb svg{ width:26px; height:26px; opacity:0.85; }
+  .idetails{ flex:1; min-width:0; }
+  .idetails .iname{ font-weight:600; font-size:0.94rem; }
+  .idetails .idesc{ font-size:0.76rem; color:#8b8672; margin-top:2px; }
+  .idetails .iprice{ font-family:'IBM Plex Mono', monospace; font-size:0.85rem; color:var(--forest); margin-top:4px; }
+  .iadd{
+    flex:0 0 auto; width:34px; height:34px; border-radius:50%; border:1px solid var(--forest);
+    background:var(--sand); color:var(--forest); font-size:1.1rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .iadd.has-qty{ background:var(--forest); color:var(--sand); border-color:var(--forest); font-family:'IBM Plex Mono', monospace; font-size:0.85rem; font-weight:600; width:auto; padding:0 10px; border-radius:20px; }
+
+  /* ---- Floating cart bar ---- */
+  .cartbar{
+    position:fixed; left:50%; bottom:18px; transform:translateX(-50%) translateY(100px);
+    width:calc(100% - 40px); max-width:440px; background:var(--forest-deep); color:var(--sand);
+    border-radius:12px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer; box-shadow:0 10px 30px rgba(32,44,36,0.35); transition:transform 0.25s ease;
+    z-index:20;
+  }
+  .cartbar.show{ transform:translateX(-50%) translateY(0); }
+  .cartbar .cinfo{ font-size:0.85rem; }
+  .cartbar .cinfo b{ font-family:'IBM Plex Mono', monospace; }
+  .cartbar .cview{ font-weight:600; font-size:0.85rem; color:var(--brass); }
+
+  /* ---- Sheet (cart / checkout) ---- */
+  .sheet-overlay{
+    position:fixed; inset:0; background:rgba(30,36,29,0.4); opacity:0; pointer-events:none;
+    transition:opacity 0.25s ease; z-index:30;
+  }
+  .sheet-overlay.show{ opacity:1; pointer-events:auto; }
+  .sheet{
+    position:fixed; left:50%; bottom:0; transform:translateX(-50%) translateY(100%);
+    width:100%; max-width:480px; background:var(--white); border-radius:18px 18px 0 0;
+    max-height:88vh; overflow-y:auto; transition:transform 0.3s cubic-bezier(.4,0,.2,1); z-index:31;
+    padding:22px 20px 26px;
+  }
+  .sheet.show{ transform:translateX(-50%) translateY(0); }
+  .sheet-handle{ width:36px; height:4px; background:var(--line); border-radius:2px; margin:0 auto 16px; }
+  .sheet h2{ font-family:'Fraunces', serif; font-weight:500; font-size:1.25rem; margin-bottom:14px; }
+
+  .cline{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--sand-deep); font-size:0.9rem; }
+  .cline .cname{ flex:1; }
+  .cline .cqty{ display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono', monospace; }
+  .cline .cqty button{ width:20px; height:20px; border:1px solid var(--line); background:var(--sand); border-radius:4px; cursor:pointer; }
+  .cline .cprice{ width:60px; text-align:right; font-family:'IBM Plex Mono', monospace; }
+
+  .ctotals{ margin-top:14px; font-family:'IBM Plex Mono', monospace; font-size:0.88rem; }
+  .trow{ display:flex; justify-content:space-between; padding:3px 0; }
+  .trow.grand{ font-size:1.05rem; font-weight:600; color:var(--forest); padding-top:8px; border-top:1px solid var(--line); margin-top:6px; }
+
+  .section-head{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--sage); margin:20px 0 10px; }
+
+  .optgrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .optcard{
+    border:1px solid var(--line); border-radius:8px; padding:12px; cursor:pointer; text-align:left;
+  }
+  .optcard.selected{ border-color:var(--forest); background:var(--sand); }
+  .optcard .ot{ font-weight:600; font-size:0.88rem; }
+  .optcard .od{ font-size:0.74rem; color:#8b8672; margin-top:3px; line-height:1.4; }
+
+  .pmgrid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .pmgrid.hidden{ display:none; }
+  .pmethod{ padding:10px; border:1px solid var(--line); border-radius:6px; text-align:center; font-size:0.82rem; cursor:pointer; }
+  .pmethod.selected{ border-color:var(--forest); background:var(--forest); color:var(--sand); }
+
+  .cta{
+    width:100%; margin-top:20px; padding:14px; border:none; border-radius:8px;
+    background:var(--forest); color:var(--sand); font-weight:600; font-size:0.94rem; cursor:pointer;
+  }
+  .cta:hover{ background:var(--forest-deep); }
+
+  .confirm{ text-align:center; padding:20px 6px 6px; }
+  .confirm .tick{ width:54px; height:54px; margin:0 auto 14px; }
+  .confirm h2{ margin-bottom:6px; }
+  .confirm p{ font-size:0.88rem; color:#8b8672; line-height:1.5; }
+  .confirm .oid{ font-family:'IBM Plex Mono', monospace; font-size:0.82rem; color:var(--forest); margin-top:10px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="row1">
+      <div class="brand">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 4C20 4 8 12 8 24C8 31 13 36 20 36C27 36 32 31 32 24C32 12 20 4 20 4Z" stroke="#C9A227" stroke-width="1.8"/>
+          <path d="M20 36V16" stroke="#C9A227" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <span>Bagaicha Villa</span>
+      </div>
+    </div>
+    <div class="greet">Namaste, Sujata — order from wherever you are</div>
+    <div class="catbar" id="catbar"></div>
+  </header>
+
+  <div class="menu" id="menuList"></div>
+</div>
+
+<div class="cartbar" id="cartbar">
+  <div class="cinfo"><b id="cartCount">0</b> items · Rs <span id="cartTotal">0</span></div>
+  <div class="cview">View cart →</div>
+</div>
+
+<div class="sheet-overlay" id="overlay"></div>
+
+<!-- CART SHEET -->
+<div class="sheet" id="cartSheet">
+  <div class="sheet-handle"></div>
+  <h2>Your order</h2>
+  <div id="cartLines"></div>
+  <div class="ctotals">
+    <div class="trow"><span>Subtotal</span><span>Rs <span id="sSubtotal">0</span></span></div>
+    <div class="trow"><span>Tax (13%)</span><span>Rs <span id="sTax">0</span></span></div>
+    <div class="trow grand"><span>Total</span><span>Rs <span id="sGrand">0</span></span></div>
+  </div>
+
+  <div class="section-head">How will you settle up?</div>
+  <div class="optgrid">
+    <div class="optcard selected" data-opt="physical">
+      <div class="ot">Pay at the villa</div>
+      <div class="od">Cash or card in person — staff will prepare your bill.</div>
+    </div>
+    <div class="optcard" data-opt="online">
+      <div class="ot">Pay online now</div>
+      <div class="od">Settle from your device before your order is prepared.</div>
+    </div>
+  </div>
+
+  <div class="pmgrid hidden" id="onlineMethods">
+    <div class="pmethod selected" data-method="eSewa">eSewa</div>
+    <div class="pmethod" data-method="Khalti">Khalti</div>
+    <div class="pmethod" data-method="Bank Transfer">Bank Transfer</div>
+  </div>
+
+  <button class="cta" id="placeOrderBtn">Place order</button>
+</div>
+
+<!-- CONFIRM SHEET -->
+<div class="sheet" id="confirmSheet">
+  <div class="sheet-handle"></div>
+  <div class="confirm">
+    <svg class="tick" viewBox="0 0 54 54" fill="none">
+      <circle cx="27" cy="27" r="26" stroke="#4F6B4A" stroke-width="2"/>
+      <path d="M16 28l8 8 14-16" stroke="#4F6B4A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <h2 style="font-family:'Fraunces',serif;font-weight:500;">Order placed</h2>
+    <p id="confirmMsg">Your order has been sent to the kitchen.</p>
+    <div class="oid" id="orderId">Order BV-0000</div>
+    <button class="cta" id="doneBtn">Back to menu</button>
+  </div>
+</div>
+
+<script>
+  const menu = {
+    Starters: [
+      { name:'Momo (Veg)', price:180, desc:'Steamed dumplings, tomato achar' },
+      { name:'Momo (Chicken)', price:220, desc:'Steamed dumplings, tomato achar' },
+      { name:'Garden Salad', price:150, desc:'From the villa\'s own beds' },
+    ],
+    Mains: [
+      { name:'Dal Bhat Set', price:350, desc:'Rice, lentils, seasonal sides' },
+      { name:'Grilled Trout', price:520, desc:'River-caught, herb butter' },
+      { name:'Paneer Tikka Masala', price:380, desc:'Charred paneer, tomato gravy' },
+    ],
+    Drinks: [
+      { name:'Masala Chai', price:80, desc:'House blend' },
+      { name:'Fresh Lime Soda', price:120, desc:'Sweet, salted, or plain' },
+      { name:'House Lassi', price:150, desc:'Thick-set, lightly sweetened' },
+    ],
+    Desserts: [
+      { name:'Sel Roti & Honey', price:140, desc:'Warm, with wild honey' },
+      { name:'Chocolate Mousse', price:190, desc:'Dark chocolate, sea salt' },
+    ],
+  };
+
+  const cart = new Map();
+  let activeCat = 'Starters';
+  let orderCounter = 1;
+  let settleMode = 'physical';
+  let onlineMethod = 'eSewa';
+
+  const catbar = document.getElementById('catbar');
+  Object.keys(menu).forEach(cat => {
+    const chip = document.createElement('div');
+    chip.className = 'catchip' + (cat === activeCat ? ' active' : '');
+    chip.textContent = cat;
+    chip.dataset.cat = cat;
+    chip.addEventListener('click', () => { activeCat = cat; renderMenu(); });
+    catbar.appendChild(chip);
+  });
+
+  function leafIcon(){
+    return `<svg viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 5 6 5 13C5 17 8 20 12 20C16 20 19 17 19 13C19 6 12 2 12 2Z" stroke="#F6F3EA" stroke-width="1.4"/><path d="M12 20V9" stroke="#F6F3EA" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+  }
+
+  function renderMenu(){
+    document.querySelectorAll('.catchip').forEach(c => c.classList.toggle('active', c.dataset.cat === activeCat));
+    const list = document.getElementById('menuList');
+    list.innerHTML = '';
+    menu[activeCat].forEach(item => {
+      const qty = cart.get(item.name)?.qty || 0;
+      const row = document.createElement('div');
+      row.className = 'item';
+      row.innerHTML = `
+        <div class="thumb">${leafIcon()}</div>
+        <div class="idetails">
+          <div class="iname">${item.name}</div>
+          <div class="idesc">${item.desc}</div>
+          <div class="iprice">Rs ${item.price}</div>
+        </div>
+        <button class="iadd ${qty > 0 ? 'has-qty' : ''}">${qty > 0 ? qty : '+'}</button>
+      `;
+      row.querySelector('.iadd').addEventListener('click', () => {
+        const line = cart.get(item.name) || { price:item.price, qty:0 };
+        line.qty += 1;
+        cart.set(item.name, line);
+        renderMenu();
+        updateCartBar();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  function updateCartBar(){
+    let count = 0, total = 0;
+    cart.forEach(l => { count += l.qty; total += l.qty * l.price; });
+    document.getElementById('cartCount').textContent = count;
+    document.getElementById('cartTotal').textContent = total;
+    document.getElementById('cartbar').classList.toggle('show', count > 0);
+  }
+
+  function renderCartSheet(){
+    const container = document.getElementById('cartLines');
+    container.innerHTML = '';
+    cart.forEach((line, name) => {
+      const row = document.createElement('div');
+      row.className = 'cline';
+      row.innerHTML = `
+        <div class="cname">${name}</div>
+        <div class="cqty">
+          <button data-act="minus">−</button>
+          <span>${line.qty}</span>
+          <button data-act="plus">+</button>
+        </div>
+        <div class="cprice">Rs ${line.price * line.qty}</div>
+      `;
+      row.querySelector('[data-act="minus"]').addEventListener('click', () => {
+        line.qty -= 1;
+        if(line.qty <= 0) cart.delete(name);
+        renderCartSheet(); renderMenu(); updateCartBar();
+      });
+      row.querySelector('[data-act="plus"]').addEventListener('click', () => {
+        line.qty += 1;
+        renderCartSheet(); renderMenu(); updateCartBar();
+      });
+      container.appendChild(row);
+    });
+    let subtotal = 0;
+    cart.forEach(l => subtotal += l.price * l.qty);
+    const tax = Math.round(subtotal * 0.13);
+    document.getElementById('sSubtotal').textContent = subtotal;
+    document.getElementById('sTax').textContent = tax;
+    document.getElementById('sGrand').textContent = subtotal + tax;
+  }
+
+  const overlay = document.getElementById('overlay');
+  const cartSheet = document.getElementById('cartSheet');
+  const confirmSheet = document.getElementById('confirmSheet');
+
+  function openSheet(sheet){
+    overlay.classList.add('show');
+    sheet.classList.add('show');
+  }
+  function closeSheets(){
+    overlay.classList.remove('show');
+    cartSheet.classList.remove('show');
+    confirmSheet.classList.remove('show');
+  }
+
+  document.getElementById('cartbar').addEventListener('click', () => {
+    renderCartSheet();
+    openSheet(cartSheet);
+  });
+  overlay.addEventListener('click', closeSheets);
+
+  document.querySelectorAll('.optcard').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.optcard').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      settleMode = card.dataset.opt;
+      document.getElementById('onlineMethods').classList.toggle('hidden', settleMode !== 'online');
+    });
+  });
+
+  document.querySelectorAll('.pmethod').forEach(pm => {
+    pm.addEventListener('click', () => {
+      document.querySelectorAll('.pmethod').forEach(x => x.classList.remove('selected'));
+      pm.classList.add('selected');
+      onlineMethod = pm.dataset.method;
+    });
+  });
+
+  document.getElementById('placeOrderBtn').addEventListener('click', () => {
+    if(cart.size === 0) return;
+    const orderId = 'BV-' + String(orderCounter).padStart(4, '0');
+    orderCounter++;
+    document.getElementById('orderId').textContent = 'Order ' + orderId;
+
+    if(settleMode === 'physical'){
+      document.getElementById('confirmMsg').textContent =
+        'Sent to the kitchen — staff will prepare your bill for cash or card payment when you\'re ready.';
+    } else {
+      document.getElementById('confirmMsg').textContent =
+        `Payment via ${onlineMethod} confirmed — your order is on its way to the kitchen.`;
+    }
+
+    cart.clear();
+    renderMenu();
+    updateCartBar();
+    cartSheet.classList.remove('show');
+    openSheet(confirmSheet);
+  });
+
+  document.getElementById('doneBtn').addEventListener('click', closeSheets);
+
+  renderMenu();
+</script>
+
+</body>
+</html>

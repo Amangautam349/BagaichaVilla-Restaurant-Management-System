@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bagaicha Villa — Admin · Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#F6F3EA; --sand-deep:#EDE8D8; --forest:#2F4034; --forest-deep:#202C24;
+    --sage:#8A9A5B; --brass:#C9A227; --ink:#1E241D; --line:#D8D2C0; --white:#FFFFFF;
+    --error:#A3432F; --warn:#B7791F; --ok:#4F6B4A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Work Sans', sans-serif; background:var(--sand); color:var(--ink); }
+
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:16px 28px; background:var(--forest); color:var(--sand); }
+  .who{ display:flex; align-items:center; gap:12px; }
+  .who .mark{ width:26px; height:26px; }
+  .who h1{ font-family:'Fraunces', serif; font-weight:500; font-size:1.15rem; }
+  .who .sub{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--sage); }
+  .navchips{ display:flex; gap:8px; }
+  .navchip{ padding:7px 14px; border-radius:20px; font-size:0.8rem; background:rgba(255,255,255,0.1); color:var(--sand); }
+  .navchip.active{ background:var(--brass); color:var(--forest-deep); font-weight:600; }
+
+  .layout{ display:flex; min-height:calc(100vh - 60px); }
+  .list-side{ flex:1.4; padding:26px 30px; }
+  .form-side{ flex:1; min-width:340px; max-width:380px; background:var(--white); border-left:1px solid var(--line); padding:26px 26px 40px; }
+
+  .list-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .list-head h2{ font-family:'Fraunces', serif; font-weight:500; font-size:1.4rem; }
+  .count{ font-family:'IBM Plex Mono', monospace; font-size:0.78rem; color:var(--sage); }
+
+  .summary-row{ display:flex; gap:12px; margin:16px 0 22px; }
+  .sumcard{ flex:1; background:var(--white); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .sumcard .slabel{ font-family:'IBM Plex Mono', monospace; font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--sage); }
+  .sumcard .sval{ font-family:'Fraunces', serif; font-weight:500; font-size:1.5rem; margin-top:4px; }
+  .sumcard.warn .sval{ color:var(--warn); }
+  .sumcard.err .sval{ color:var(--error); }
+
+  table{ width:100%; border-collapse:collapse; background:var(--white); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  thead th{
+    text-align:left; font-family:'IBM Plex Mono', monospace; font-size:0.7rem; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--sage); padding:12px 14px; border-bottom:1px solid var(--line); background:var(--sand-deep);
+  }
+  tbody td{ padding:12px 14px; font-size:0.87rem; border-bottom:1px solid var(--sand-deep); }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:var(--sand); cursor:pointer; }
+  .iname{ font-weight:600; }
+  .istock{ font-family:'IBM Plex Mono', monospace; }
+  .badge{ display:inline-block; padding:3px 9px; border-radius:12px; font-size:0.72rem; font-weight:600; }
+  .badge.ok{ background:rgba(79,107,74,0.12); color:var(--ok); }
+  .badge.low{ background:rgba(183,121,31,0.14); color:var(--warn); }
+  .badge.out{ background:rgba(163,67,47,0.14); color:var(--error); }
+
+  /* ---- Form ---- */
+  .form-side .eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--sage); }
+  .form-side h2{ font-family:'Fraunces', serif; font-weight:500; font-size:1.3rem; margin:4px 0 20px; }
+
+  .field{ margin-bottom:15px; }
+  .field label{ display:block; font-size:0.8rem; font-weight:500; color:var(--forest); margin-bottom:6px; }
+  .field input, .field select{
+    width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:5px;
+    background:var(--sand); font-family:'Work Sans', sans-serif; font-size:0.9rem; color:var(--ink); outline:none;
+  }
+  .field input:focus, .field select:focus{ border-color:var(--forest); box-shadow:0 0 0 3px rgba(47,64,52,0.1); background:var(--white); }
+  .field .hint{ margin-top:6px; font-size:0.76rem; color:var(--error); display:none; }
+  .field.error input{ border-color:var(--error); }
+  .field.error .hint{ display:block; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .submit{ width:100%; padding:13px 14px; background:var(--forest); color:var(--sand); border:none; border-radius:5px; font-weight:600; font-size:0.92rem; cursor:pointer; margin-top:4px; }
+  .submit:hover{ background:var(--forest-deep); }
+  .cancel-edit{ width:100%; padding:10px; background:none; border:none; color:#8b8672; font-size:0.82rem; cursor:pointer; margin-top:8px; display:none; }
+  .cancel-edit.show{ display:block; }
+
+  .adjust-block{ display:flex; gap:8px; margin-top:6px; }
+  .adjust-block button{ flex:1; padding:9px; border:1px solid var(--line); background:var(--sand); border-radius:5px; font-size:0.82rem; cursor:pointer; }
+  .adjust-block button:hover{ border-color:var(--forest); }
+
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--forest-deep); color:var(--sand); padding:12px 20px; border-radius:6px;
+    font-size:0.85rem; opacity:0; transition:all 0.25s ease; pointer-events:none; font-family:'IBM Plex Mono', monospace;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width: 900px){
+    .layout{ flex-direction:column; }
+    .form-side{ max-width:none; border-left:none; border-top:1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="who">
+    <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 4C20 4 8 12 8 24C8 31 13 36 20 36C27 36 32 31 32 24C32 12 20 4 20 4Z" stroke="#C9A227" stroke-width="1.6"/>
+      <path d="M20 36V16" stroke="#C9A227" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>Bagaicha Villa — Admin</h1>
+      <div class="sub">Signed in as super admin</div>
+    </div>
+  </div>
+  <div class="navchips">
+    <div class="navchip">Menu</div>
+    <div class="navchip active">Inventory</div>
+    <div class="navchip">Sales & Audit</div>
+    <div class="navchip">Social feed</div>
+    <div class="navchip">Appearance</div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="list-side">
+    <div class="list-head">
+      <h2>Inventory</h2>
+      <div class="count" id="itemCount">0 items</div>
+    </div>
+
+    <div class="summary-row">
+      <div class="sumcard"><div class="slabel">Tracked items</div><div class="sval" id="sumTotal">0</div></div>
+      <div class="sumcard warn"><div class="slabel">Low stock</div><div class="sval" id="sumLow">0</div></div>
+      <div class="sumcard err"><div class="slabel">Out of stock</div><div class="sval" id="sumOut">0</div></div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Item</th><th>Category</th><th>Stock</th><th>Reorder at</th><th>Status</th></tr>
+      </thead>
+      <tbody id="invBody"></tbody>
+    </table>
+  </div>
+
+  <div class="form-side">
+    <div class="eyebrow" id="formEyebrow">New item</div>
+    <h2 id="formTitle">Add inventory item</h2>
+
+    <div class="field" data-field="name">
+      <label for="iname">Item name</label>
+      <input id="iname" type="text" placeholder="e.g. Basmati Rice">
+      <div class="hint">Enter an item name.</div>
+    </div>
+
+    <div class="row2">
+      <div class="field" data-field="category">
+        <label for="icat">Category</label>
+        <select id="icat">
+          <option>Grains & Pulses</option>
+          <option>Vegetables</option>
+          <option>Meat & Fish</option>
+          <option>Dairy</option>
+          <option>Beverages</option>
+          <option>Spices & Condiments</option>
+          <option>Packaging</option>
+        </select>
+      </div>
+      <div class="field" data-field="unit">
+        <label for="iunit">Unit</label>
+        <select id="iunit">
+          <option>kg</option>
+          <option>g</option>
+          <option>litre</option>
+          <option>ml</option>
+          <option>pcs</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field" data-field="stock">
+        <label for="istock">Current stock</label>
+        <input id="istock" type="number" min="0" placeholder="0">
+        <div class="hint">Enter current stock.</div>
+      </div>
+      <div class="field" data-field="reorder">
+        <label for="ireorder">Reorder threshold</label>
+        <input id="ireorder" type="number" min="0" placeholder="0">
+        <div class="hint">Enter a reorder level.</div>
+      </div>
+    </div>
+
+    <button class="submit" id="saveItem">Add item</button>
+    <button class="cancel-edit" id="cancelEdit">Cancel editing</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let items = [
+    { id:1, name:'Basmati Rice', category:'Grains & Pulses', unit:'kg', stock:42, reorder:15 },
+    { id:2, name:'Chicken (fresh)', category:'Meat & Fish', unit:'kg', stock:6, reorder:10 },
+    { id:3, name:'Whole Milk', category:'Dairy', unit:'litre', stock:0, reorder:8 },
+    { id:4, name:'Red Onion', category:'Vegetables', unit:'kg', stock:22, reorder:10 },
+    { id:5, name:'Paneer', category:'Dairy', unit:'kg', stock:4, reorder:5 },
+    { id:6, name:'Local Beer (bottle)', category:'Beverages', unit:'pcs', stock:60, reorder:24 },
+    { id:7, name:'Garam Masala', category:'Spices & Condiments', unit:'kg', stock:3, reorder:1 },
+    { id:8, name:'Takeaway Boxes', category:'Packaging', unit:'pcs', stock:18, reorder:50 },
+  ];
+  let nextId = 9;
+  let editingId = null;
+
+  function statusOf(item){
+    if(item.stock <= 0) return 'out';
+    if(item.stock <= item.reorder) return 'low';
+    return 'ok';
+  }
+
+  function renderTable(){
+    const body = document.getElementById('invBody');
+    body.innerHTML = '';
+    let low = 0, out = 0;
+    items.forEach(item => {
+      const st = statusOf(item);
+      if(st === 'low') low++;
+      if(st === 'out') out++;
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="iname">${item.name}</td>
+        <td>${item.category}</td>
+        <td class="istock">${item.stock} ${item.unit}</td>
+        <td class="istock">${item.reorder} ${item.unit}</td>
+        <td><span class="badge ${st}">${st === 'ok' ? 'In stock' : st === 'low' ? 'Low' : 'Out of stock'}</span></td>
+      `;
+      row.addEventListener('click', () => startEdit(item.id));
+      body.appendChild(row);
+    });
+    document.getElementById('itemCount').textContent = items.length + (items.length === 1 ? ' item' : ' items');
+    document.getElementById('sumTotal').textContent = items.length;
+    document.getElementById('sumLow').textContent = low;
+    document.getElementById('sumOut').textContent = out;
+  }
+
+  function startEdit(id){
+    const item = items.find(x => x.id === id);
+    if(!item) return;
+    editingId = id;
+    document.getElementById('formEyebrow').textContent = 'Editing item';
+    document.getElementById('formTitle').textContent = 'Edit inventory item';
+    document.getElementById('iname').value = item.name;
+    document.getElementById('icat').value = item.category;
+    document.getElementById('iunit').value = item.unit;
+    document.getElementById('istock').value = item.stock;
+    document.getElementById('ireorder').value = item.reorder;
+    document.getElementById('saveItem').textContent = 'Save changes';
+    document.getElementById('cancelEdit').classList.add('show');
+
+    // remove any previous adjust block, add fresh one
+    const oldAdjust = document.querySelector('.adjust-block');
+    if(oldAdjust) oldAdjust.remove();
+    const adjust = document.createElement('div');
+    adjust.className = 'adjust-block';
+    adjust.innerHTML = `<button data-d="-1">− Deduct 1 ${item.unit}</button><button data-d="1">+ Add 1 ${item.unit}</button>`;
+    document.getElementById('saveItem').insertAdjacentElement('afterend', adjust);
+    adjust.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        const delta = Number(b.dataset.d);
+        const cur = items.find(x => x.id === editingId);
+        cur.stock = Math.max(0, cur.stock + delta);
+        document.getElementById('istock').value = cur.stock;
+        renderTable();
+      });
+    });
+
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }
+
+  function resetForm(){
+    editingId = null;
+    document.getElementById('formEyebrow').textContent = 'New item';
+    document.getElementById('formTitle').textContent = 'Add inventory item';
+    document.getElementById('iname').value = '';
+    document.getElementById('icat').value = 'Grains & Pulses';
+    document.getElementById('iunit').value = 'kg';
+    document.getElementById('istock').value = '';
+    document.getElementById('ireorder').value = '';
+    document.getElementById('saveItem').textContent = 'Add item';
+    document.getElementById('cancelEdit').classList.remove('show');
+    document.querySelectorAll('.field').forEach(f => f.classList.remove('error'));
+    const oldAdjust = document.querySelector('.adjust-block');
+    if(oldAdjust) oldAdjust.remove();
+  }
+
+  document.getElementById('cancelEdit').addEventListener('click', resetForm);
+
+  document.getElementById('saveItem').addEventListener('click', () => {
+    const nameField = document.querySelector('[data-field="name"]');
+    const stockField = document.querySelector('[data-field="stock"]');
+    const reorderField = document.querySelector('[data-field="reorder"]');
+    const nameVal = document.getElementById('iname').value.trim();
+    const stockVal = document.getElementById('istock').value;
+    const reorderVal = document.getElementById('ireorder').value;
+    const catVal = document.getElementById('icat').value;
+    const unitVal = document.getElementById('iunit').value;
+
+    let valid = true;
+    nameField.classList.toggle('error', nameVal.length === 0);
+    if(nameVal.length === 0) valid = false;
+    stockField.classList.toggle('error', stockVal === '' || Number(stockVal) < 0);
+    if(stockVal === '' || Number(stockVal) < 0) valid = false;
+    reorderField.classList.toggle('error', reorderVal === '' || Number(reorderVal) < 0);
+    if(reorderVal === '' || Number(reorderVal) < 0) valid = false;
+    if(!valid) return;
+
+    if(editingId){
+      const it = items.find(x => x.id === editingId);
+      it.name = nameVal; it.category = catVal; it.unit = unitVal;
+      it.stock = Number(stockVal); it.reorder = Number(reorderVal);
+      showToast(`Saved changes to "${nameVal}".`);
+    } else {
+      items.push({ id:nextId++, name:nameVal, category:catVal, unit:unitVal, stock:Number(stockVal), reorder:Number(reorderVal) });
+      showToast(`"${nameVal}" added to inventory.`);
+    }
+    renderTable();
+    resetForm();
+  });
+
+  function showToast(msg){
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  renderTable();
+</script>
+
+</body>
+</html>

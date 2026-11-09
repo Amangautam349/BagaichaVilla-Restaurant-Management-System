@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bagaicha Villa — Staff Billing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#F6F3EA; --sand-deep:#EDE8D8; --forest:#2F4034; --forest-deep:#202C24;
+    --sage:#8A9A5B; --brass:#C9A227; --ink:#1E241D; --line:#D8D2C0; --white:#FFFFFF;
+    --error:#A3432F; --ok:#4F6B4A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Work Sans', sans-serif; background:var(--sand); color:var(--ink); }
+
+  /* ---- Top bar ---- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px; background:var(--forest); color:var(--sand);
+  }
+  .topbar .who{ display:flex; align-items:center; gap:12px; }
+  .topbar .who .mark{ width:26px; height:26px; }
+  .topbar .who h1{ font-family:'Fraunces', serif; font-weight:500; font-size:1.15rem; }
+  .topbar .who .staffline{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--sage); }
+  .status{
+    display:flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono', monospace; font-size:0.75rem;
+    padding:7px 12px; border-radius:20px; background:rgba(255,255,255,0.08);
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--sage); }
+  .status.offline .dot{ background:#D9A441; animation:pulse 1.4s infinite; }
+  .status.offline{ background:rgba(217,164,65,0.14); }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+
+  /* ---- Layout ---- */
+  .layout{ display:flex; min-height:calc(100vh - 60px); }
+  .menu-side{ flex:1.4; padding:24px 28px; }
+  .bill-side{
+    flex:1; min-width:340px; max-width:400px;
+    background:var(--white); border-left:1px solid var(--line);
+    display:flex; flex-direction:column;
+  }
+
+  .section-head{
+    font-family:'IBM Plex Mono', monospace; font-size:0.72rem; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--sage); margin:22px 0 10px;
+  }
+  .section-head:first-child{ margin-top:0; }
+
+  .cat-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:12px; }
+  .dish{
+    background:var(--white); border:1px solid var(--line); border-radius:6px;
+    padding:14px; display:flex; flex-direction:column; gap:6px; cursor:pointer;
+    transition:border-color 0.15s ease, transform 0.1s ease;
+  }
+  .dish:hover{ border-color:var(--forest); }
+  .dish:active{ transform:scale(0.98); }
+  .dish .dname{ font-weight:600; font-size:0.94rem; }
+  .dish .dprice{ font-family:'IBM Plex Mono', monospace; font-size:0.85rem; color:var(--forest); }
+  .dish .dtag{ font-size:0.72rem; color:#9a927b; }
+
+  /* ---- Bill panel ---- */
+  .bill-head{ padding:22px 22px 14px; border-bottom:1px dashed var(--line); }
+  .bill-head .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:0.7rem; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--sage);
+  }
+  .bill-head h2{ font-family:'Fraunces', serif; font-weight:500; font-size:1.3rem; margin-top:4px; }
+  .bill-head .tno{ font-family:'IBM Plex Mono', monospace; font-size:0.78rem; color:#9a927b; margin-top:4px; }
+
+  .bill-lines{ flex:1; overflow-y:auto; padding:14px 22px; }
+  .line{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 0; border-bottom:1px solid var(--sand-deep);
+    font-size:0.9rem;
+  }
+  .line .lname{ flex:1; }
+  .line .lqty{ display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono', monospace; }
+  .line .lqty button{
+    width:20px; height:20px; border:1px solid var(--line); background:var(--sand);
+    border-radius:4px; cursor:pointer; font-size:0.8rem; line-height:1;
+  }
+  .line .lprice{ width:64px; text-align:right; font-family:'IBM Plex Mono', monospace; }
+  .empty-bill{ color:#9a927b; font-size:0.88rem; padding:30px 0; text-align:center; }
+
+  .bill-totals{ padding:14px 22px; border-top:1px dashed var(--line); font-family:'IBM Plex Mono', monospace; font-size:0.88rem; }
+  .trow{ display:flex; justify-content:space-between; padding:3px 0; }
+  .trow.grand{ font-size:1.05rem; font-weight:600; color:var(--forest); padding-top:8px; border-top:1px solid var(--line); margin-top:6px; }
+
+  .pay-methods{ padding:14px 22px 0; }
+  .pay-methods .section-head{ margin:0 0 8px; }
+  .pmgrid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .pmethod{
+    padding:10px; border:1px solid var(--line); border-radius:4px; text-align:center;
+    font-size:0.82rem; cursor:pointer; background:var(--sand);
+  }
+  .pmethod.selected{ border-color:var(--forest); background:var(--forest); color:var(--sand); }
+
+  .bill-actions{ padding:16px 22px 22px; display:flex; gap:10px; }
+  .btn{
+    flex:1; padding:12px; border:none; border-radius:4px; font-weight:600; font-size:0.88rem;
+    cursor:pointer; font-family:'Work Sans', sans-serif;
+  }
+  .btn.primary{ background:var(--forest); color:var(--sand); }
+  .btn.primary:hover{ background:var(--forest-deep); }
+  .btn.ghost{ background:var(--sand); color:var(--forest); border:1px solid var(--line); }
+
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--forest-deep); color:var(--sand); padding:12px 20px; border-radius:6px;
+    font-size:0.85rem; opacity:0; transition:all 0.25s ease; pointer-events:none;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width: 880px){
+    .layout{ flex-direction:column; }
+    .bill-side{ max-width:none; border-left:none; border-top:1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="who">
+    <svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 4C20 4 8 12 8 24C8 31 13 36 20 36C27 36 32 31 32 24C32 12 20 4 20 4Z" stroke="#C9A227" stroke-width="1.6"/>
+      <path d="M20 36V16" stroke="#C9A227" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>Bagaicha Villa — Billing</h1>
+      <div class="staffline" id="staffline">Staff BV-014 · Anjali</div>
+    </div>
+  </div>
+  <div class="status" id="netstatus">
+    <span class="dot"></span>
+    <span id="netlabel">Online — syncing normally</span>
+  </div>
+</div>
+
+<div class="layout">
+
+  <div class="menu-side">
+    <div class="section-head">Starters</div>
+    <div class="cat-grid" id="cat-starters"></div>
+
+    <div class="section-head">Mains</div>
+    <div class="cat-grid" id="cat-mains"></div>
+
+    <div class="section-head">Drinks</div>
+    <div class="cat-grid" id="cat-drinks"></div>
+
+    <div class="section-head">Desserts</div>
+    <div class="cat-grid" id="cat-desserts"></div>
+  </div>
+
+  <div class="bill-side">
+    <div class="bill-head">
+      <div class="eyebrow">Current bill</div>
+      <h2>Table / Guest tab</h2>
+      <div class="tno" id="billno">Bill draft — not yet saved</div>
+    </div>
+
+    <div class="bill-lines" id="billLines">
+      <div class="empty-bill">Tap a dish to add it to the bill.</div>
+    </div>
+
+    <div class="bill-totals">
+      <div class="trow"><span>Subtotal</span><span id="subtotal">Rs 0</span></div>
+      <div class="trow"><span>Tax (13%)</span><span id="tax">Rs 0</span></div>
+      <div class="trow grand"><span>Total</span><span id="grandtotal">Rs 0</span></div>
+    </div>
+
+    <div class="pay-methods">
+      <div class="section-head">Payment method</div>
+      <div class="pmgrid">
+        <div class="pmethod selected" data-method="Cash">Cash</div>
+        <div class="pmethod" data-method="eSewa">eSewa</div>
+        <div class="pmethod" data-method="Khalti">Khalti</div>
+        <div class="pmethod" data-method="Bank Transfer">Bank Transfer</div>
+      </div>
+    </div>
+
+    <div class="bill-actions">
+      <button class="btn ghost" id="clearBtn">Clear</button>
+      <button class="btn primary" id="saveBtn">Save bill</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const menu = {
+    starters: [
+      { name:'Momo (Veg)', price:180 },
+      { name:'Momo (Chicken)', price:220 },
+      { name:'Garden Salad', price:150 },
+      { name:'Soup of the Day', price:160 },
+    ],
+    mains: [
+      { name:'Dal Bhat Set', price:350 },
+      { name:'Grilled Trout', price:520 },
+      { name:'Paneer Tikka Masala', price:380 },
+      { name:'Chicken Sekuwa', price:420 },
+    ],
+    drinks: [
+      { name:'Masala Chai', price:80 },
+      { name:'Fresh Lime Soda', price:120 },
+      { name:'Local Beer', price:280 },
+      { name:'House Lassi', price:150 },
+    ],
+    desserts: [
+      { name:'Sel Roti & Honey', price:140 },
+      { name:'Chocolate Mousse', price:190 },
+    ],
+  };
+
+  const bill = new Map(); // name -> {price, qty}
+  let selectedMethod = 'Cash';
+  let billCounter = 1;
+  let queuedOffline = 0;
+
+  function renderMenu(){
+    for(const cat in menu){
+      const grid = document.getElementById('cat-' + cat);
+      grid.innerHTML = '';
+      menu[cat].forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'dish';
+        el.innerHTML = `<div class="dname">${item.name}</div><div class="dprice">Rs ${item.price}</div><div class="dtag">Tap to add</div>`;
+        el.addEventListener('click', () => addToBill(item));
+        grid.appendChild(el);
+      });
+    }
+  }
+
+  function addToBill(item){
+    if(bill.has(item.name)){
+      bill.get(item.name).qty += 1;
+    } else {
+      bill.set(item.name, { price:item.price, qty:1 });
+    }
+    renderBill();
+  }
+
+  function changeQty(name, delta){
+    const line = bill.get(name);
+    if(!line) return;
+    line.qty += delta;
+    if(line.qty <= 0) bill.delete(name);
+    renderBill();
+  }
+
+  function renderBill(){
+    const container = document.getElementById('billLines');
+    container.innerHTML = '';
+    if(bill.size === 0){
+      container.innerHTML = '<div class="empty-bill">Tap a dish to add it to the bill.</div>';
+    } else {
+      bill.forEach((line, name) => {
+        const row = document.createElement('div');
+        row.className = 'line';
+        row.innerHTML = `
+          <div class="lname">${name}</div>
+          <div class="lqty">
+            <button data-act="minus">−</button>
+            <span>${line.qty}</span>
+            <button data-act="plus">+</button>
+          </div>
+          <div class="lprice">Rs ${line.price * line.qty}</div>
+        `;
+        row.querySelector('[data-act="minus"]').addEventListener('click', () => changeQty(name, -1));
+        row.querySelector('[data-act="plus"]').addEventListener('click', () => changeQty(name, 1));
+        container.appendChild(row);
+      });
+    }
+
+    let subtotal = 0;
+    bill.forEach(line => subtotal += line.price * line.qty);
+    const tax = Math.round(subtotal * 0.13);
+    document.getElementById('subtotal').textContent = 'Rs ' + subtotal;
+    document.getElementById('tax').textContent = 'Rs ' + tax;
+    document.getElementById('grandtotal').textContent = 'Rs ' + (subtotal + tax);
+  }
+
+  document.querySelectorAll('.pmethod').forEach(pm => {
+    pm.addEventListener('click', () => {
+      document.querySelectorAll('.pmethod').forEach(x => x.classList.remove('selected'));
+      pm.classList.add('selected');
+      selectedMethod = pm.dataset.method;
+    });
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    bill.clear();
+    renderBill();
+  });
+
+  function showToast(msg){
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    if(bill.size === 0){
+      showToast('Add at least one item before saving.');
+      return;
+    }
+    const isOnline = document.getElementById('netstatus').classList.contains('offline') === false;
+    const billId = 'BV-' + String(billCounter).padStart(4,'0');
+    billCounter++;
+    document.getElementById('billno').textContent = `Bill ${billId} · Paid via ${selectedMethod}`;
+
+    if(isOnline){
+      showToast(`Bill ${billId} saved and synced.`);
+    } else {
+      queuedOffline++;
+      showToast(`Bill ${billId} saved offline — will sync (${queuedOffline} queued).`);
+    }
+
+    bill.clear();
+    renderBill();
+  });
+
+  // ---- Simulated online/offline toggle (click the status pill to test) ----
+  const netstatus = document.getElementById('netstatus');
+  const netlabel = document.getElementById('netlabel');
+  netstatus.style.cursor = 'pointer';
+  netstatus.title = 'Click to simulate offline mode';
+  netstatus.addEventListener('click', () => {
+    const goingOffline = !netstatus.classList.contains('offline');
+    netstatus.classList.toggle('offline', goingOffline);
+    netlabel.textContent = goingOffline
+      ? 'Offline — bills will queue locally'
+      : 'Online — syncing normally';
+    if(!goingOffline && queuedOffline > 0){
+      showToast(`Back online — syncing ${queuedOffline} queued bill(s).`);
+      queuedOffline = 0;
+    }
+  });
+
+  renderMenu();
+</script>
+
+</body>
+</html>
